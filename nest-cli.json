@@ -8,6 +8,14 @@
 		"tsConfigPath": "tsconfig.json"
 	},
 	"watch": {
-		"ignore": ["node_modules", "dist", "logs"]
+		"ignore": [
+			"node_modules",
+			"dist",
+			"logs",
+			"postgres",
+			".cursor",
+			".idea",
+			".vscode"
+		]
 	}
 }

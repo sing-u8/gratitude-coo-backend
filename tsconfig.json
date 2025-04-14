@@ -17,8 +17,8 @@
 			"@modules/*": ["src/modules/*"],
 			"@member/*": ["src/member/*"],
 			"@gratitude/*": ["src/gratitude/*"],
-			"@auth/*": ["src/auth/*"],
-			"@comment/*": ["src/comment/*"],
+			"@auth/*": ["src/member/auth/*"],
+			"@comment/*": ["src/comment/*"]
 		},
 		"incremental": true,
 		"skipLibCheck": true,
