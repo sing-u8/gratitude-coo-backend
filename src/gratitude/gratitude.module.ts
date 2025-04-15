@@ -7,10 +7,12 @@ import { GratitudePost } from './entity/gratitude-post.entity';
 import { GratitudeLike } from './entity/gratitude-like.entity';
 import { GratitudeComment } from './entity/gratitude-comment.entity';
 import { Member } from '@/member/entity/member.entity';
+import { CommonModule } from '@/common/common.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([GratitudePost, GratitudeLike, GratitudeComment, Member]),
     MemberModule,
+    CommonModule,
   ],
   controllers: [GratitudeController],
   providers: [GratitudeService],

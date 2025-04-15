@@ -17,7 +17,11 @@ async function bootstrap() {
 		.build();
 
 	const documentFactory = () => SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup("api", app, documentFactory);
+	SwaggerModule.setup("api", app, documentFactory,{
+		swaggerOptions: {
+			persistAuthorization: true,
+		}
+	});
 
 	app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 

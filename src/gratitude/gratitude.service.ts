@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, LoggerService, NotFoundException, Inject } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateGratitudeDto } from './dto/create-gratitude.dto';
@@ -7,6 +6,9 @@ import { UpdateGratitudeDto } from './dto/update-gratitude.dto';
 import { GratitudePost } from './entity/gratitude-post.entity';
 import { GratitudeLike } from './entity/gratitude-like.entity';
 import { Member } from '@/member/entity/member.entity';
+import { GetGratitudeDto, GetGratitudeResponseDto, PostType } from './dto/get-gratitude.dto';
+import { CommonService } from '@/common/common.service';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class GratitudeService {
@@ -18,27 +20,136 @@ export class GratitudeService {
     private memberRepository: Repository<Member>,
     @InjectRepository(GratitudePost)
     private gratitudePostRepository: Repository<GratitudePost>,
-    private configService: ConfigService,
-    
+    private commonService: CommonService,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
   ) {}
 
-  // createGratitude(createGratitudeDto: CreateGratitudeDto) {
-  //   return 'This action adds a new gratitude';
-  // }
+  async  createGratitude(createGratitudeDto: CreateGratitudeDto) {
+    const { contents, recipientId, authorId, isAnonymous, visibility } = createGratitudeDto;
 
-  // getGratitudeList() {
-  //   return `This action returns all gratitude`;
-  // }
+    const recipient = await this.memberRepository.findOne({
+      where: { id: recipientId },
+    });
+    if (!recipient) {
+      throw new NotFoundException('Recipient not found');
+    }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} gratitude`;
-  // }
+    const author = await this.memberRepository.findOne({
+      where: { id: authorId },
+    }); 
+    if (!author) {
+      throw new NotFoundException('Author not found');
+    }
 
-  // update(id: number, updateGratitudeDto: UpdateGratitudeDto) {
-  //   return `This action updates a #${id} gratitude`;
-  // }
+    const gratitudePost = this.gratitudePostRepository.create({
+      contents: contents,
+      recipient: recipient,
+      author: author,
+      isAnonymous: isAnonymous,
+      visibility: visibility,
+    });
 
-  // remove(id: number) {
-  //   return `This action removes a #${id} gratitude`;
-  // }
+    return await this.gratitudePostRepository.save(gratitudePost);
+  }
+
+  async updateGratitude(id: number, updateGratitudeDto: UpdateGratitudeDto) {
+    const gratitudePost = await this.gratitudePostRepository.findOne({
+      where: { id },
+    })
+    if (!gratitudePost) {
+      throw new NotFoundException('Gratitude post not found');
+    }
+
+    await this.gratitudePostRepository.update(id, updateGratitudeDto)
+
+    return this.gratitudePostRepository.findOne({
+      where: { id },
+    });
+  }
+
+  async deleteGratitude(id: number) {
+    const gratitudePost = await this.gratitudePostRepository.findOne({
+      where: { id },
+    })
+    if (!gratitudePost) {
+      throw new NotFoundException('Gratitude post not found');
+    }
+
+    await this.gratitudePostRepository.delete(id)
+    
+    return id;
+  }
+
+
+  async getGratitudeList(getGratitudeDto: GetGratitudeDto) {
+    const { memberId, postType } = getGratitudeDto;
+
+    const queryBuilder = this.gratitudePostRepository.createQueryBuilder('gratitudePost')
+      // .leftJoinAndSelect('gratitudePost.recipient', 'recipient')
+      // .leftJoinAndSelect('gratitudePost.author', 'author');
+
+    this.logger.log(`getGratitudeList -- ${JSON.stringify(getGratitudeDto)}`);
+
+    if(postType === PostType.FromMe) {
+      queryBuilder
+        .where('gratitudePost.recipientId = :recipientId', { recipientId: memberId })
+        .andWhere('gratitudePost.authorId = :authorId', { authorId: memberId });
+    } else if(postType === PostType.FromOther) {
+      queryBuilder
+        .where('gratitudePost.recipientId = :recipientId', { recipientId: memberId })
+        .andWhere('gratitudePost.authorId != :authorId', { authorId: memberId });
+    } else if(postType === PostType.ToOther) {
+      queryBuilder
+        .where('gratitudePost.recipientId != :recipientId', { recipientId: memberId })
+        .andWhere('gratitudePost.authorId = :authorId', { authorId: memberId });
+    }
+
+    
+
+    const { nextCursor } = await this.commonService.applyCursorPaginationParamsToQb(queryBuilder, getGratitudeDto);
+    
+    const [gratitudeList, count] = await queryBuilder.getManyAndCount();
+
+    return new GetGratitudeResponseDto(gratitudeList, nextCursor, count);
+  }
+
+  async toggleGratitudeLike(id: number, userId: number) {
+    const gratitudePost = await this.gratitudePostRepository.findOne({
+      where: { id },
+    })
+    if (!gratitudePost) {
+      throw new NotFoundException('Gratitude post not found');
+    }
+
+    const member = await this.memberRepository.findOne({
+      where: { id: userId },
+    })
+    if (!member) {
+      throw new NotFoundException('Member not found');
+    }
+
+    const likeRecord = await this.gratitudeLikeRepository.createQueryBuilder('like')
+      .where('like.gratitudePostId = :id', { id })
+      .andWhere('like.memberId = :userId', { userId })
+      .getOne();
+
+    if (likeRecord) {
+      await this.gratitudeLikeRepository.delete(likeRecord.id);
+      return { isLiked: false };
+    } 
+
+    await this.gratitudeLikeRepository.save({
+      gratitudePost,
+      member,
+    }); 
+    return { isLiked: true }; 
+  }
+
+  async getGratitudeLikeCount(id: number) {
+    const likeCount = await this.gratitudeLikeRepository.count({
+      where: { gratitudePost: { id } },
+    });
+    return likeCount;
+  }
 }

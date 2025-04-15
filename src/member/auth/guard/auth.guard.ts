@@ -1,22 +1,30 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Inject, Injectable, LoggerService, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Public } from "../decorator/public.decorator";
+import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-	constructor(private readonly reflector: Reflector) {}
+	constructor(
+		private readonly reflector: Reflector,
+		@Inject(WINSTON_MODULE_NEST_PROVIDER)
+		private readonly logger: LoggerService,
+	) {}
 
 	canActivate(context: ExecutionContext): boolean {
-		// 만약에 public decoration이 돼있으면
-		// 모든 로직을 bypass
 		const isPublic = this.reflector.get(Public, context.getHandler());
-
 		if (isPublic) return true;
 
-		// 요청에서 user 객체가 존재하는지 확인한다.
 		const request = context.switchToHttp().getRequest();
+		this.logger.log('auth guard:', request);
 
-		if (!request.user || request.user.type !== "access") return false;
+		if (!request.user) {
+			throw new UnauthorizedException('인증이 필요합니다.');
+		}
+
+		if (request.user.type !== 'access') {
+			throw new UnauthorizedException('잘못된 토큰 타입입니다.');
+		}
 
 		return true;
 	}

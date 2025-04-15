@@ -8,9 +8,15 @@ export class GratitudeLike extends BaseEntity {
 	@PrimaryGeneratedColumn()
 	id!: number;
 
-	@ManyToOne(() => Member)
+	@ManyToOne(
+		() => Member,
+		(member) => member.likes,
+	)
 	member!: Member;
 
-	@ManyToOne(() => GratitudePost)
+	@ManyToOne(
+		() => GratitudePost,
+		(gratitudePost) => gratitudePost.likes,
+	)
 	gratitudePost!: GratitudePost;
 }

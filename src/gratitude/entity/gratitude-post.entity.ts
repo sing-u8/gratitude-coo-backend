@@ -18,39 +18,36 @@ export enum Visibility {
 @Entity()
 export class GratitudePost extends BaseEntity {
 	@PrimaryGeneratedColumn()
-	id!: number;
+	id: number;
 
 	@ManyToOne(() => Member)
-	recipient!: Member;
+	recipient: Member;
 
 	@ManyToOne(() => Member)
-	author!: Member;
+	author: Member;
 
 	@Column({ length: 1000 })
-	contents!: string;
-
-	@Column()
-	createdDate!: Date;
+	contents: string;
 
 	@Column({ default: false })
-	isAnonymous!: boolean;
+	isAnonymous: boolean;
 
 	@Column({
 		type: "enum",
 		enum: Visibility,
 		default: Visibility.PUBLIC,
 	})
-	visibility!: Visibility;
+	visibility: Visibility;
 
 	@OneToMany(
 		() => GratitudeLike,
 		(like) => like.gratitudePost,
 	)
-	likes!: GratitudeLike[];
+	likes: GratitudeLike[];
 
 	@OneToMany(
 		() => GratitudeComment,
 		(gratitudeComment) => gratitudeComment.gratitudePost,
 	)
-	comments!: GratitudeComment[];
+	comments: GratitudeComment[];
 }
