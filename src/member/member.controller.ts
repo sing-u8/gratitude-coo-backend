@@ -10,11 +10,14 @@ import {
   ParseIntPipe,
   UseInterceptors,
   ClassSerializerInterceptor,
+  Query,
 } from '@nestjs/common';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { MemberService } from './member.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { SearchMemberDto, SearchMemberResponseDto } from './dto/search-member.dto';
+import { Public } from './auth/decorator/public.decorator';
 
 @Controller('member')
 @ApiBearerAuth()
@@ -28,12 +31,13 @@ export class MemberController {
     return this.memberService.create(createMemberDto);
   }
 
-  @Get()
+  @Get("all")
   findAll() {
     return this.memberService.findAll();
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.memberService.findOne(id);
   }
@@ -46,5 +50,11 @@ export class MemberController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.memberService.remove(id);
+  }
+
+  @Get()
+  @Public()
+  searchMember(@Query() searchMemberDto: SearchMemberDto): Promise<SearchMemberResponseDto> {
+    return this.memberService.searchMember(searchMemberDto);
   }
 }

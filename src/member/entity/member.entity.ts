@@ -1,7 +1,7 @@
-import { Comment } from "@comment/entity/comment.entity";
-import { BaseEntity } from "@common/entity/base.entity";
 import { GratitudeLike } from "@gratitude/entity/gratitude-like.entity";
 import { GratitudePost } from "@gratitude/entity/gratitude-post.entity";
+import { GratitudeComment } from "@/gratitude/entity/gratitude-comment.entity";
+import { BaseEntity } from "@common/entity/base.entity";
 import { Exclude } from "class-transformer";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -37,6 +37,6 @@ export class Member extends BaseEntity {
 	@OneToMany(() => GratitudeLike, (like) => like.member)
 	likes!: GratitudeLike[];
 
-	@OneToMany(() => Comment, (comment) => comment.author)
-	comments!: Comment[];
+	@OneToMany(() => GratitudeComment, (gratitudeComment) => gratitudeComment.author)
+	comments!: GratitudeComment[];
 }

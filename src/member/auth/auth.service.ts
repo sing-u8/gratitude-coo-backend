@@ -122,8 +122,8 @@ export class AuthService {
 		return this.memberService.create({
 		  email,
 		  password,
-		  name: email,
-		  nickname: email,
+		  name: "",
+		  nickname: "",
 		});
 	  }
 	

@@ -1,18 +1,24 @@
 import { join } from "node:path";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { CacheModule } from "@nestjs/cache-manager";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import * as Joi from "joi";
 import { WinstonModule } from "nest-winston";
 import * as winston from "winston";
-import { Comment } from "./comment/entity/comment.entity";
+
 import { envVarKeys } from "./common/const/env.const";
+
 import { GratitudeLike } from "./gratitude/entity/gratitude-like.entity";
 import { GratitudePost } from "./gratitude/entity/gratitude-post.entity";
-import { AuthModule } from "./member/auth/auth.module";
+import { GratitudeComment } from "./gratitude/entity/gratitude-comment.entity";
 import { Member } from "./member/entity/member.entity";
+
+import { AuthModule } from "./member/auth/auth.module";
 import { MemberModule } from "./member/member.module";
-import { CacheModule } from "@nestjs/cache-manager";
+import { GratitudeModule } from './gratitude/gratitude.module';
+import { APP_GUARD } from "@nestjs/core";
+import { AuthGuard } from "./member/auth/guard/auth.guard";
 
 @Module({
 	imports: [
@@ -45,7 +51,7 @@ import { CacheModule } from "@nestjs/cache-manager";
 				username: configService.get<string>(envVarKeys.DB_USERNAME),
 				password: configService.get<string>(envVarKeys.DB_PASSWORD),
 				database: configService.get<string>(envVarKeys.DB_DATABASE),
-				entities: [Member, GratitudePost, GratitudeLike, Comment],
+				entities: [Member, GratitudePost, GratitudeLike, GratitudeComment],
 				synchronize: true,
 				autoLoadEntities: true,
 			}),
@@ -84,12 +90,16 @@ import { CacheModule } from "@nestjs/cache-manager";
 			ttl: 1000,
 			isGlobal: true,
 		}),
-
 		AuthModule,
-
 		MemberModule,
+		GratitudeModule,
 	],
 	controllers: [],
-	providers: [],
+	providers: [
+		{
+			provide: APP_GUARD,
+			useClass: AuthGuard,
+		}
+	],
 })
 export class AppModule {}

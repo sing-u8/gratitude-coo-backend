@@ -4,7 +4,7 @@ import { Member } from "@member/entity/member.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
-export class Comment extends BaseEntity {
+export class GratitudeComment extends BaseEntity {
 	@PrimaryGeneratedColumn()
 	id!: number;
 

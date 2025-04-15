@@ -13,6 +13,8 @@ import { envVarKeys } from '@common/const/env.const';
 import { CreateMemberDto } from "./dto/create-member.dto";
 import { UpdateMemberDto } from "./dto/update-member.dto";
 import { Member } from './entity/member.entity';
+import { SearchMemberDto, SearchMemberResponseDto } from './dto/search-member.dto';
+import { CommonService } from '@/common/common.service';
 
 @Injectable()
 export class MemberService {
@@ -20,6 +22,7 @@ export class MemberService {
 		@InjectRepository(Member)
 		private memberRepository: Repository<Member>,
 		private configService: ConfigService,
+		private commonService: CommonService,
 	) {}
 
 	async create(createMemberDto: CreateMemberDto) {
@@ -105,5 +108,24 @@ export class MemberService {
 		await this.memberRepository.delete(id);
 
 		return id;
+	}
+
+	// 유저에 따라 검색할 수 있는 메시지가 달라짐 --> 나중에 추가로 구현하기
+	async searchMember(searchMemberDto: SearchMemberDto) {
+		const { search } = searchMemberDto;
+
+		const queryBuilder = this.memberRepository.createQueryBuilder('member');
+
+		if(search) {
+			queryBuilder
+				.where('member.nickname LIKE :search', { search: `%${search}%` })
+				.orWhere('member.name LIKE :search', { search: `%${search}%` });
+		}
+
+		const { nextCursor } = await this.commonService.applyCursorPaginationParamsToQb(queryBuilder, searchMemberDto);
+
+		const [members, count] = await queryBuilder.getManyAndCount();
+
+		return new SearchMemberResponseDto(members, nextCursor, count);
 	}
 }

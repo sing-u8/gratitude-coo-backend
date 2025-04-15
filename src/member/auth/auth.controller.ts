@@ -4,6 +4,7 @@ import { ApiBasicAuth, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorator/public.decorator';
 import { Authorization } from './decorator/authorization.decorator';
 
+// todo: Basic Auth에서 다른 방식으로 구현해보기 --> 최종 목표 mtls
 @Controller('auth')
 @ApiTags('auth')
 @ApiBearerAuth()

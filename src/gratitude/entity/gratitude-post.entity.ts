@@ -1,4 +1,3 @@
-import { Comment } from "@comment/entity/comment.entity";
 import { BaseEntity } from "@common/entity/base.entity";
 import { Member } from "@member/entity/member.entity";
 import {
@@ -9,6 +8,7 @@ import {
 	PrimaryGeneratedColumn,
 } from "typeorm";
 import { GratitudeLike } from "./gratitude-like.entity";
+import { GratitudeComment } from "./gratitude-comment.entity";
 
 export enum Visibility {
 	PRIVATE = "isPrivate",
@@ -28,9 +28,6 @@ export class GratitudePost extends BaseEntity {
 
 	@Column({ length: 1000 })
 	contents!: string;
-
-	@Column({ default: false })
-	isHidden!: boolean;
 
 	@Column()
 	createdDate!: Date;
@@ -52,8 +49,8 @@ export class GratitudePost extends BaseEntity {
 	likes!: GratitudeLike[];
 
 	@OneToMany(
-		() => Comment,
-		(comment) => comment.gratitudePost,
+		() => GratitudeComment,
+		(gratitudeComment) => gratitudeComment.gratitudePost,
 	)
-	comments!: Comment[];
+	comments!: GratitudeComment[];
 }
