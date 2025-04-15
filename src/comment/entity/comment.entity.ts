@@ -1,19 +1,19 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { BaseEntity } from '@common/entity/base.entity';
-import { Member } from '@member/entity/member.entity';
-import { GratitudePost } from '@gratitude/entity/gratitude-post.entity';
+import { BaseEntity } from "@common/entity/base.entity";
+import { GratitudePost } from "@gratitude/entity/gratitude-post.entity";
+import { Member } from "@member/entity/member.entity";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Comment extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id!: number;
+	@PrimaryGeneratedColumn()
+	id!: number;
 
-  @ManyToOne(() => Member)
-  author!: Member;
+	@ManyToOne(() => Member)
+	author!: Member;
 
-  @ManyToOne(() => GratitudePost)
-  gratitudePost!: GratitudePost;
+	@ManyToOne(() => GratitudePost)
+	gratitudePost!: GratitudePost;
 
-  @Column({ length: 1000 })
-  content!: string;
-} 
+	@Column({ length: 1000 })
+	content!: string;
+}
