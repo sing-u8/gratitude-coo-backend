@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Put,
   Param,
   Delete,
   ParseIntPipe,
@@ -16,7 +17,7 @@ import { MemberService } from './member.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('member')
-// @ApiBearerAuth()
+@ApiBearerAuth()
 @ApiTags('Member')
 @UseInterceptors(ClassSerializerInterceptor)
 export class MemberController {
@@ -37,7 +38,7 @@ export class MemberController {
     return this.memberService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() updateMemberDto: UpdateMemberDto) {
     return this.memberService.update(id, updateMemberDto);
   }

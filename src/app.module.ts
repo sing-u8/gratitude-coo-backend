@@ -12,6 +12,7 @@ import { GratitudePost } from "./gratitude/entity/gratitude-post.entity";
 import { AuthModule } from "./member/auth/auth.module";
 import { Member } from "./member/entity/member.entity";
 import { MemberModule } from "./member/member.module";
+import { CacheModule } from "@nestjs/cache-manager";
 
 @Module({
 	imports: [
@@ -32,6 +33,8 @@ import { MemberModule } from "./member/member.module";
 				HASH_ROUNDS: Joi.number().required(),
 				ACCESS_TOKEN_EXPIRATION_TIME: Joi.string().required(),
 				REFRESH_TOKEN_EXPIRATION_TIME: Joi.string().required(),
+				JWT_SECRET: Joi.string().required(),
+				JWT_REFRESH_SECRET: Joi.string().required(),
 			}),
 		}),
 		TypeOrmModule.forRootAsync({
@@ -76,6 +79,10 @@ import { MemberModule } from "./member/member.module";
 					),
 				}),
 			],
+		}),
+		CacheModule.register({
+			ttl: 1000,
+			isGlobal: true,
 		}),
 
 		AuthModule,
