@@ -1,37 +1,40 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from "@nestjs/common";
+import {
+	CallHandler,
+	ExecutionContext,
+	Injectable,
+	NestInterceptor,
+} from "@nestjs/common";
 import { catchError, Observable, tap } from "rxjs";
 import { DataSource } from "typeorm";
 
 @Injectable()
 export class TransactionInterceptor implements NestInterceptor {
-    constructor(
-        private readonly dataSource: DataSource,
-    ) { }
+	constructor(private readonly dataSource: DataSource) {}
 
-    async intercept(context: ExecutionContext, next: CallHandler<unknown>): Promise<Observable<unknown>> {
-        const req = context.switchToHttp().getRequest();
+	async intercept(
+		context: ExecutionContext,
+		next: CallHandler<unknown>,
+	): Promise<Observable<unknown>> {
+		const req = context.switchToHttp().getRequest();
 
-        const qr = this.dataSource.createQueryRunner();
+		const qr = this.dataSource.createQueryRunner();
 
-        await qr.connect();
-        await qr.startTransaction();
+		await qr.connect();
+		await qr.startTransaction();
 
-        req.queryRunner = qr;
+		req.queryRunner = qr;
 
-        return next.handle()
-            .pipe(
-                catchError(
-                    async (e)=>{
-                        await qr.rollbackTransaction();
-                        await qr.release();
+		return next.handle().pipe(
+			catchError(async (e) => {
+				await qr.rollbackTransaction();
+				await qr.release();
 
-                        throw e;
-                    }
-                ),
-                tap(async ()=> {
-                    await qr.commitTransaction();
-                    await qr.release();
-                }),
-            );
-    }
+				throw e;
+			}),
+			tap(async () => {
+				await qr.commitTransaction();
+				await qr.release();
+			}),
+		);
+	}
 }

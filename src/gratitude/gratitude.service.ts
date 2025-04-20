@@ -102,24 +102,24 @@ export class GratitudeService {
 
 		if (postType === PostType.FromMe) {
 			queryBuilder
-				.where("gratitudePost.recipientId = :recipientId", {
-					recipientId: memberId,
+				.where("gratitudePost.recipientId = :memberId", {
+					memberId,
 				})
-				.andWhere("gratitudePost.authorId = :authorId", { authorId: memberId });
+				.andWhere("gratitudePost.authorId = :memberId", { memberId });
 		} else if (postType === PostType.FromOther) {
 			queryBuilder
-				.where("gratitudePost.recipientId = :recipientId", {
-					recipientId: memberId,
+				.where("gratitudePost.recipientId = :memberId", {
+					memberId,
 				})
-				.andWhere("gratitudePost.authorId != :authorId", {
-					authorId: memberId,
+				.andWhere("gratitudePost.memberId != :memberId", {
+					memberId,
 				});
 		} else if (postType === PostType.ToOther) {
 			queryBuilder
-				.where("gratitudePost.recipientId != :recipientId", {
-					recipientId: memberId,
+				.where("gratitudePost.recipientId != :memberId", {
+					memberId,
 				})
-				.andWhere("gratitudePost.authorId = :authorId", { authorId: memberId });
+				.andWhere("gratitudePost.authorId = :memberId", { memberId });
 		}
 
 		const { nextCursor } =

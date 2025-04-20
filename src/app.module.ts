@@ -1,5 +1,10 @@
 import { join } from "node:path";
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
+import {
+	MiddlewareConsumer,
+	Module,
+	NestModule,
+	RequestMethod,
+} from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { CacheModule } from "@nestjs/cache-manager";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -16,7 +21,7 @@ import { Member } from "./member/entity/member.entity";
 
 import { AuthModule } from "./member/auth/auth.module";
 import { MemberModule } from "./member/member.module";
-import { GratitudeModule } from './gratitude/gratitude.module';
+import { GratitudeModule } from "./gratitude/gratitude.module";
 import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "./member/auth/guard/auth.guard";
 import { BearerTokenMiddleware } from "./member/auth/middleware/bearer-token.middleware";
@@ -100,18 +105,23 @@ import { BearerTokenMiddleware } from "./member/auth/middleware/bearer-token.mid
 		{
 			provide: APP_GUARD,
 			useClass: AuthGuard,
-		}
+		},
 	],
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(BearerTokenMiddleware).exclude({
-			path: 'auth/login',
-			method: RequestMethod.POST,
-		  }, {
-			path: 'auth/register',
-			method: RequestMethod.POST,
-		  })
-			.forRoutes('*')
+		consumer
+			.apply(BearerTokenMiddleware)
+			.exclude(
+				{
+					path: "auth/login",
+					method: RequestMethod.POST,
+				},
+				{
+					path: "auth/register",
+					method: RequestMethod.POST,
+				},
+			)
+			.forRoutes("*");
 	}
 }

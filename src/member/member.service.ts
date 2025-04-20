@@ -2,19 +2,22 @@ import {
 	BadRequestException,
 	Injectable,
 	NotFoundException,
-  } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';	
-import { NotFoundError } from 'rxjs';
-import * as bcrypt from 'bcrypt';
-import { ConfigService } from '@nestjs/config';
-import { envVarKeys } from '@common/const/env.const';
+} from "@nestjs/common";
+import { Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+import { NotFoundError } from "rxjs";
+import * as bcrypt from "bcrypt";
+import { ConfigService } from "@nestjs/config";
+import { envVarKeys } from "@common/const/env.const";
 
 import { CreateMemberDto } from "./dto/create-member.dto";
 import { UpdateMemberDto } from "./dto/update-member.dto";
-import { Member } from './entity/member.entity';
-import { SearchMemberDto, SearchMemberResponseDto } from './dto/search-member.dto';
-import { CommonService } from '@/common/common.service';
+import { Member } from "./entity/member.entity";
+import {
+	SearchMemberDto,
+	SearchMemberResponseDto,
+} from "./dto/search-member.dto";
+import { CommonService } from "@/common/common.service";
 
 @Injectable()
 export class MemberService {
@@ -31,12 +34,16 @@ export class MemberService {
 		const existingMember = await this.memberRepository.findOne({
 			where: {
 				email,
-			}
-		})
+			},
+		});
 
-		if (existingMember) throw new BadRequestException('이미 존재하는 이메일입니다.');
-	
-		const hashedPassword = await bcrypt.hash(password, this.configService.get<number>(envVarKeys.HASH_ROUNDS) ?? 10);
+		if (existingMember)
+			throw new BadRequestException("이미 존재하는 이메일입니다.");
+
+		const hashedPassword = await bcrypt.hash(
+			password,
+			this.configService.get<number>(envVarKeys.HASH_ROUNDS) ?? 10,
+		);
 
 		const member = this.memberRepository.create({
 			name,
@@ -50,7 +57,7 @@ export class MemberService {
 		return this.memberRepository.findOne({
 			where: {
 				email,
-			}
+			},
 		});
 	}
 
@@ -62,11 +69,11 @@ export class MemberService {
 		const member = await this.memberRepository.findOne({
 			where: {
 				id,
-			}
+			},
 		});
 
-		if (!member) throw new NotFoundException('존재하지 않는 회원입니다.');
-		
+		if (!member) throw new NotFoundException("존재하지 않는 회원입니다.");
+
 		return member;
 	}
 
@@ -74,25 +81,31 @@ export class MemberService {
 		const member = await this.memberRepository.findOne({
 			where: {
 				id,
-			}
+			},
 		});
-		
-		if (!member) throw new NotFoundException('존재하지 않는 회원입니다.');
+
+		if (!member) throw new NotFoundException("존재하지 않는 회원입니다.");
 
 		const updateData = Object.assign({}, updateMemberDto);
 
-		if(updateMemberDto.password) {
-			updateData.password = await bcrypt.hash(updateMemberDto.password, this.configService.get<number>(envVarKeys.HASH_ROUNDS) ?? 10);
+		if (updateMemberDto.password) {
+			updateData.password = await bcrypt.hash(
+				updateMemberDto.password,
+				this.configService.get<number>(envVarKeys.HASH_ROUNDS) ?? 10,
+			);
 		}
 
-		await this.memberRepository.update({
-			id,	
-		}, updateData);
+		await this.memberRepository.update(
+			{
+				id,
+			},
+			updateData,
+		);
 
 		return this.memberRepository.findOne({
 			where: {
 				id,
-			}
+			},
 		});
 	}
 
@@ -100,10 +113,10 @@ export class MemberService {
 		const member = await this.memberRepository.findOne({
 			where: {
 				id,
-			}
+			},
 		});
 
-		if (!member) throw new NotFoundException('존재하지 않는 회원입니다.');
+		if (!member) throw new NotFoundException("존재하지 않는 회원입니다.");
 
 		await this.memberRepository.delete(id);
 
@@ -114,15 +127,19 @@ export class MemberService {
 	async searchMember(searchMemberDto: SearchMemberDto) {
 		const { search } = searchMemberDto;
 
-		const queryBuilder = this.memberRepository.createQueryBuilder('member');
+		const queryBuilder = this.memberRepository.createQueryBuilder("member");
 
-		if(search) {
+		if (search) {
 			queryBuilder
-				.where('member.nickname LIKE :search', { search: `%${search}%` })
-				.orWhere('member.name LIKE :search', { search: `%${search}%` });
+				.where("member.nickname LIKE :search", { search: `%${search}%` })
+				.orWhere("member.name LIKE :search", { search: `%${search}%` });
 		}
 
-		const { nextCursor } = await this.commonService.applyCursorPaginationParamsToQb(queryBuilder, searchMemberDto);
+		const { nextCursor } =
+			await this.commonService.applyCursorPaginationParamsToQb(
+				queryBuilder,
+				searchMemberDto,
+			);
 
 		const [members, count] = await queryBuilder.getManyAndCount();
 

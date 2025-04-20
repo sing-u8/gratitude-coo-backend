@@ -29,13 +29,21 @@ export class CommonService {
 		if (cursor) {
 			const decodedCursor = Buffer.from(cursor, "base64").toString("utf-8");
 
+			/**
+			 * {
+			 *  values : {
+			 *      id: 27
+			 *  },
+			 *  order: ['id_DESC']
+			 * }
+			 */
 			const cursorObj = JSON.parse(decodedCursor);
 
 			order = cursorObj.order as string[];
 
 			const { values } = cursorObj;
 
-			// 날짜 필드를 Date 객체로 변환
+			// // 날짜 필드를 Date 객체로 변환
 			const processedValues = { ...values };
 			if (
 				processedValues.createdAt &&
@@ -50,49 +58,57 @@ export class CommonService {
 				processedValues.updatedAt = new Date(processedValues.updatedAt);
 			}
 
-			// Build a more flexible WHERE clause for cursor pagination
-			// For multiple ordering fields:
-			// (first_field > value1) OR
-			// (first_field = value1 AND second_field > value2) OR
-			// (first_field = value1 AND second_field = value2 AND third_field > value3)
-			// and so on...
+			/// WHERE (column1 > value1)
+			/// OR      (column1 = value1 AND column2 < value2)
+			/// OR      (column1 = value1 AND column2 = value2 AND column3 > value3)
 
-			const columns = Object.keys(values);
-
+			const columns = Object.keys(processedValues);
+			
 			if (columns.length > 0) {
-				const whereClauses: Array<string> = [];
-
-				// Build the WHERE clause for each level of ordering
-				for (let i = 0; i < columns.length; i++) {
-					const currentFields = columns.slice(0, i + 1);
-					const lastField = currentFields[currentFields.length - 1];
-
-					// Determine the comparison operator for the last field
-					const [, lastFieldDirection] = order[i].split("_");
-					const comparisonOperator = lastFieldDirection === "DESC" ? "<" : ">";
-
-					// Build equality conditions for all fields except the last one
-					const equalityConditions = currentFields
-						.slice(0, -1)
-						.map((field) => `${qb.alias}.${field} = :${field}`);
-
-					// Comparison condition for the last field
-					const comparisonCondition = `${qb.alias}.${lastField} ${comparisonOperator} :${lastField}`;
-
-					// Combine conditions
-					let whereClause = comparisonCondition;
-					if (equalityConditions.length > 0) {
-						whereClause = `${equalityConditions.join(" AND ")} AND ${comparisonCondition}`;
-					}
-
-					whereClauses.push(`(${whereClause})`);
+				const comparisonOperator = order.some((o) => o.endsWith("DESC"))
+					? "<"
+					: ">";
+				
+				// 여러 정렬 필드에 대한 커서 조건 생성
+				const whereClauses: string[] = [];
+				
+				// 첫 번째 정렬 필드에 대한 조건
+				const firstColumn = columns[0];
+				const firstCondition = `${qb.alias}.${firstColumn} ${comparisonOperator} :cursor_${firstColumn}`;
+				whereClauses.push(`(${firstCondition})`);
+				
+				// 복합 정렬 필드에 대한 조건 (예: 첫 번째는 같고 두 번째는 큰/작은)
+				for (let i = 1; i < columns.length; i++) {
+					const prevColumns = columns.slice(0, i);
+					const currColumn = columns[i];
+					
+					// 이전 컬럼들은 모두 같다는 조건
+					const equalityParts = prevColumns.map(
+						(col: string) => `${qb.alias}.${col} = :cursor_${col}`
+					).join(' AND ');
+					
+					// 현재 컬럼은 비교 연산자 사용
+					const columnOp = order[i].endsWith("DESC") ? "<" : ">";
+					const comparisonPart = `${qb.alias}.${currColumn} ${columnOp} :cursor_${currColumn}`;
+					
+					whereClauses.push(`(${equalityParts} AND ${comparisonPart})`);
 				}
-
-				// Combine all level clauses with OR
-				qb.where(whereClauses.join(" OR "), processedValues);
+				
+				// 파라미터 바인딩을 위한 객체 생성
+				const cursorParams: Record<string, unknown> = {};
+				for (const col of columns) {
+					cursorParams[`cursor_${col}`] = processedValues[col];
+				}
+				
+				// 기존 WHERE 조건을 덮어쓰지 않고 AND로 추가
+				qb.andWhere(`(${whereClauses.join(' OR ')})`, cursorParams);
+				
+				this.logger.log(`Applied cursor condition: (${whereClauses.join(' OR ')})`);
+				this.logger.log(`Cursor parameters: ${JSON.stringify(cursorParams)}`);
 			}
 		}
 
+		// ["likeCount_DESC", "id_DESC"]
 		for (let i = 0; i < order.length; i++) {
 			const [column, direction] = order[i].split("_");
 
@@ -103,9 +119,9 @@ export class CommonService {
 			}
 
 			if (i === 0) {
-				qb.orderBy(`${qb.alias}.${column}`, direction);
+				qb.orderBy(`${qb.alias}.${column}`, direction as "ASC" | "DESC");
 			} else {
-				qb.addOrderBy(`${qb.alias}.${column}`, direction);
+				qb.addOrderBy(`${qb.alias}.${column}`, direction as "ASC" | "DESC");
 			}
 		}
 
@@ -113,7 +129,10 @@ export class CommonService {
 
 		const results = await qb.getMany();
 
-		const nextCursor = this.generateNextCursor(results, order);
+		// 결과가 take보다 적으면 더 이상 페이지가 없으므로 빈 커서를 반환
+		const nextCursor = results.length < take 
+			? "" 
+			: this.generateNextCursor(results, order);
 
 		return { qb, nextCursor };
 	}

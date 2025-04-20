@@ -3,6 +3,7 @@ import { Member } from "@member/entity/member.entity";
 import {
 	Column,
 	Entity,
+	JoinColumn,
 	ManyToOne,
 	OneToMany,
 	PrimaryGeneratedColumn,
@@ -20,10 +21,12 @@ export class GratitudePost extends BaseEntity {
 	@PrimaryGeneratedColumn()
 	id: number;
 
-	@ManyToOne(() => Member)
+	@ManyToOne(() => Member, (member) => member.receivedPosts)
+	@JoinColumn({ name: "recipientId" })
 	recipient: Member;
 
-	@ManyToOne(() => Member)
+	@ManyToOne(() => Member, (member) => member.authoredPosts)
+	@JoinColumn({ name: "authorId" })
 	author: Member;
 
 	@Column({ length: 1000 })

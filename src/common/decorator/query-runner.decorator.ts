@@ -1,13 +1,19 @@
-import { createParamDecorator, ExecutionContext, InternalServerErrorException } from "@nestjs/common";
+import {
+	createParamDecorator,
+	ExecutionContext,
+	InternalServerErrorException,
+} from "@nestjs/common";
 
 export const QueryRunner = createParamDecorator(
-    (_, context: ExecutionContext) => {
-        const request = context.switchToHttp().getRequest();
+	(_, context: ExecutionContext) => {
+		const request = context.switchToHttp().getRequest();
 
-        if(!request || !request.queryRunner){
-            throw new InternalServerErrorException('Query Runner 객체를 찾을 수 없습니다!')
-        }
+		if (!request || !request.queryRunner) {
+			throw new InternalServerErrorException(
+				"Query Runner 객체를 찾을 수 없습니다!",
+			);
+		}
 
-        return request.queryRunner;
-    }
+		return request.queryRunner;
+	},
 );

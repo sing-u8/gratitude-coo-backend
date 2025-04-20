@@ -1,20 +1,25 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { MemberModule } from '@member/member.module';
-import { GratitudeService } from './gratitude.service';
-import { GratitudeController } from './gratitude.controller';
-import { GratitudePost } from './entity/gratitude-post.entity';
-import { GratitudeLike } from './entity/gratitude-like.entity';
-import { GratitudeComment } from './entity/gratitude-comment.entity';
-import { Member } from '@/member/entity/member.entity';
-import { CommonModule } from '@/common/common.module';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { MemberModule } from "@member/member.module";
+import { GratitudeService } from "./gratitude.service";
+import { GratitudeController } from "./gratitude.controller";
+import { GratitudePost } from "./entity/gratitude-post.entity";
+import { GratitudeLike } from "./entity/gratitude-like.entity";
+import { GratitudeComment } from "./entity/gratitude-comment.entity";
+import { Member } from "@/member/entity/member.entity";
+import { CommonModule } from "@/common/common.module";
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([GratitudePost, GratitudeLike, GratitudeComment, Member]),
-    MemberModule,
-    CommonModule,
-  ],
-  controllers: [GratitudeController],
-  providers: [GratitudeService],
+	imports: [
+		TypeOrmModule.forFeature([
+			GratitudePost,
+			GratitudeLike,
+			GratitudeComment,
+			Member,
+		]),
+		MemberModule,
+		CommonModule,
+	],
+	controllers: [GratitudeController],
+	providers: [GratitudeService],
 })
 export class GratitudeModule {}
