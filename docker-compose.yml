@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: gratitude-coo-db
+    container_name: gratitude-coo
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
