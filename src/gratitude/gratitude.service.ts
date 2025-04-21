@@ -1,5 +1,6 @@
 import { CommonService } from "@/common/common.service";
 import { Member } from "@/member/entity/member.entity";
+import { GetGratitudeCountResponseDto } from "@gratitude/dto/get-gratitude-count.dto";
 import {
 	Inject,
 	Injectable,
@@ -111,7 +112,7 @@ export class GratitudeService {
 				.where("gratitudePost.recipientId = :memberId", {
 					memberId,
 				})
-				.andWhere("gratitudePost.memberId != :memberId", {
+				.andWhere("gratitudePost.authorId != :memberId", {
 					memberId,
 				});
 		} else if (postType === PostType.ToOther) {
@@ -167,9 +168,28 @@ export class GratitudeService {
 	}
 
 	async getGratitudeLikeCount(id: number) {
-		const likeCount = await this.gratitudeLikeRepository.count({
+		return await this.gratitudeLikeRepository.count({
 			where: { gratitudePost: { id } },
 		});
-		return likeCount;
+	}
+
+	async getGratitudeCount(userId: number) {
+		const sentGratitudeCount = await this.gratitudePostRepository.count({
+			where: { author: { id: userId } },
+		});
+
+		const queryBuilder =
+			this.gratitudePostRepository.createQueryBuilder("gratitudePost");
+		const receivedGratitudeCount = await queryBuilder
+			.where("gratitudePost.recipientId = :userId", {
+				userId,
+			})
+			.andWhere("gratitudePost.authorId != :userId", { userId })
+			.getCount();
+
+		return new GetGratitudeCountResponseDto(
+			sentGratitudeCount,
+			receivedGratitudeCount,
+		);
 	}
 }

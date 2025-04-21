@@ -1,26 +1,26 @@
+import { UserId } from "@/member/decorator/user-id.decorator";
 import {
-	Controller,
-	Get,
-	Post,
 	Body,
-	Param,
-	Delete,
 	ClassSerializerInterceptor,
-	UseInterceptors,
-	Put,
-	Request,
+	Controller,
+	Delete,
+	Get,
+	Param,
 	ParseIntPipe,
+	Post,
+	Put,
 	Query,
+	Request,
+	UseInterceptors,
 } from "@nestjs/common";
-import { GratitudeService } from "./gratitude.service";
-import { CreateGratitudeDto } from "./dto/create-gratitude.dto";
-import { UpdateGratitudeDto } from "./dto/update-gratitude.dto";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { CreateGratitudeDto } from "./dto/create-gratitude.dto";
 // import { TransactionInterceptor } from '@/common/interceptor/transaction.interceptor';
 // import { QueryRunner } from '@/common/decorator/query-runner.decorator';
 // import { QueryRunner as QueryRunnerType } from 'typeorm';
 import { GetGratitudeDto } from "./dto/get-gratitude.dto";
-import { UserId } from "@/member/decorator/user-id.decorator";
+import { UpdateGratitudeDto } from "./dto/update-gratitude.dto";
+import { GratitudeService } from "./gratitude.service";
 
 @Controller("gratitude")
 @ApiBearerAuth()
@@ -67,5 +67,10 @@ export class GratitudeController {
 	@Get(":id/like/count")
 	getGratitudeLikeCount(@Param("id", ParseIntPipe) id: number) {
 		return this.gratitudeService.getGratitudeLikeCount(id);
+	}
+
+	@Get("/count/:memberId")
+	getGratitudeCount(@Param("memberId", ParseIntPipe) memberId: number) {
+		return this.gratitudeService.getGratitudeCount(memberId);
 	}
 }

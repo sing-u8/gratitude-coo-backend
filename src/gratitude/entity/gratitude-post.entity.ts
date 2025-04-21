@@ -1,23 +1,25 @@
-import { BaseEntity } from "@common/entity/base.entity";
 import { Member } from "@member/entity/member.entity";
 import {
 	Column,
+	CreateDateColumn,
 	Entity,
 	JoinColumn,
 	ManyToOne,
 	OneToMany,
 	PrimaryGeneratedColumn,
+	UpdateDateColumn,
 } from "typeorm";
 import { GratitudeLike } from "./gratitude-like.entity";
 import { GratitudeComment } from "./gratitude-comment.entity";
-
+import { ApiHideProperty } from "@nestjs/swagger";
+import { Exclude } from "class-transformer";
 export enum Visibility {
 	PRIVATE = "isPrivate",
 	PUBLIC = "isPublic",
 }
 
 @Entity()
-export class GratitudePost extends BaseEntity {
+export class GratitudePost {
 	@PrimaryGeneratedColumn()
 	id: number;
 
@@ -53,4 +55,20 @@ export class GratitudePost extends BaseEntity {
 		(gratitudeComment) => gratitudeComment.gratitudePost,
 	)
 	comments: GratitudeComment[];
+
+	@CreateDateColumn({
+		type: "timestamp",
+		default: () => "CURRENT_TIMESTAMP",
+	})
+	@ApiHideProperty()
+	createdAt: Date;
+
+	@UpdateDateColumn({
+		type: "timestamp",
+		default: () => "CURRENT_TIMESTAMP",
+		onUpdate: "CURRENT_TIMESTAMP",
+	})
+	@Exclude()
+	@ApiHideProperty()
+	updatedAt: Date;
 }
